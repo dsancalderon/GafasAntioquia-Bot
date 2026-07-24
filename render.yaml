@@ -7,7 +7,29 @@ services:
     region: oregon
     envVars:
       - key: DB_TYPE
-        value: sqlite
+        value: postgresdb
+      - key: DB_POSTGRESDB_HOST
+        fromDatabase:
+          name: n8n-db
+          property: host
+      - key: DB_POSTGRESDB_PORT
+        fromDatabase:
+          name: n8n-db
+          property: port
+      - key: DB_POSTGRESDB_DATABASE
+        fromDatabase:
+          name: n8n-db
+          property: database
+      - key: DB_POSTGRESDB_USER
+        fromDatabase:
+          name: n8n-db
+          property: user
+      - key: DB_POSTGRESDB_PASSWORD
+        fromDatabase:
+          name: n8n-db
+          property: password
+      - key: N8N_ENCRYPTION_KEY
+        generateValue: true
       - key: N8N_HOST
         value: 0.0.0.0
       - key: N8N_LISTEN_ADDRESS
@@ -34,3 +56,10 @@ services:
         value: "false"
       - key: NODE_OPTIONS
         value: "--max-old-space-size=380"
+
+databases:
+  - name: n8n-db
+    databaseName: n8ndb
+    user: n8nuser
+    plan: free
+    region: oregon
