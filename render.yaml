@@ -54,6 +54,10 @@ services:
         value: "false"
       - key: N8N_METRICS
         value: "false"
+      - key: EXECUTIONS_DATA_PRUNE
+        value: "true"
+      - key: EXECUTIONS_DATA_MAX_AGE
+        value: "168"
       - key: NODE_OPTIONS
         value: "--max-old-space-size=380"
 
