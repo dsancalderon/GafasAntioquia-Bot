@@ -36,7 +36,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"from\": \"+573118849896\",\n  \"to\": \"{{ $json.body.whatsappInboundMessage ? $json.body.whatsappInboundMessage.from : ($json.body.customer ? $json.body.customer.phoneNumber : '+573027697381') }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ '¡Hola! 👓✨ Recibí tu mensaje: \\\"' + ($json.body.whatsappInboundMessage && $json.body.whatsappInboundMessage.text ? $json.body.whatsappInboundMessage.text.body : 'Mensaje') + '\\\". ¡El bot de Gafas Antioquia está respondiendo en tiempo real en n8n!' }}\"\n  }\n}",
+        "jsonBody": "={{ JSON.stringify({ from: '+573118849896', to: ($json.body?.whatsappInboundMessage?.from || $json.body?.customer?.phoneNumber || '+573027697381'), type: 'text', text: { body: '¡Hola! 👓✨ Recibí tu mensaje: \"' + ($json.body?.whatsappInboundMessage?.text?.body || 'Mensaje de WhatsApp') + '\". ¡El bot de Gafas Antioquia está respondiendo en tiempo real en n8n!' } }) }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
