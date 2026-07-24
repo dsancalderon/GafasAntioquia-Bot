@@ -1,7 +1,7 @@
 services:
   - type: web
     name: n8n-gafas-antioquia
-    env: docker
+    runtime: docker
     dockerfilePath: Dockerfile
     plan: free
     region: oregon
