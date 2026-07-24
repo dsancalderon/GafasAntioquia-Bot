@@ -2,6 +2,7 @@
 .env
 *.env
 *.log
+*.json
 scratch/
 tunnel_url.txt
 cloudflare_url.txt
