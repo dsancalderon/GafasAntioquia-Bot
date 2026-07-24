@@ -1,0 +1,14 @@
+# Entorno y Secretos
+.env
+*.env
+*.log
+scratch/
+tunnel_url.txt
+cloudflare_url.txt
+untun_url.txt
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

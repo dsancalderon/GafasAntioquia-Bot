@@ -1,0 +1,37 @@
+version: '3.8'
+
+networks:
+  gafas_net:
+    driver: bridge
+
+volumes:
+  n8n_storage:
+  openwa_storage:
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_gafas
+    restart: unless-stopped
+    networks:
+      - gafas_net
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_storage:/home/node/.n8n
+    environment:
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Bogota}
+      - TZ=${TZ:-America/Bogota}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      
+  openwa:
+    image: openwa/wa-automate:latest
+    container_name: openwa_gafas
+    restart: unless-stopped
+    networks:
+      - gafas_net
+    ports:
+      - "8080:8080"
+    volumes:
+      - openwa_storage:/app/session
+    environment:
+      - WA_CLI_ARGS=--use-chrome --web-api-key=GafasAntioquia2026 --dashboard
