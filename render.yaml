@@ -20,3 +20,9 @@ services:
         value: America/Bogota
       - key: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
         value: "true"
+      - key: N8N_RUNNERS_ENABLED
+        value: "false"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=450"
+      - key: N8N_WEBHOOK_URL
+        value: https://n8n-gafas-antioquia.onrender.com/
