@@ -6,9 +6,17 @@ services:
     plan: free
     region: oregon
     envVars:
+      - key: DB_TYPE
+        value: sqlite
+      - key: N8N_PORT
+        value: "5678"
+      - key: PORT
+        value: "5678"
+      - key: N8N_LISTEN_ADDRESS
+        value: 0.0.0.0
       - key: GENERIC_TIMEZONE
         value: America/Bogota
       - key: TZ
         value: America/Bogota
-      - key: N8N_PORT
-        value: "5678"
+      - key: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+        value: "true"
