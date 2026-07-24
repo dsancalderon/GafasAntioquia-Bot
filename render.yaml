@@ -26,3 +26,11 @@ services:
         value: America/Bogota
       - key: TZ
         value: America/Bogota
+      - key: N8N_RUNNERS_ENABLED
+        value: "false"
+      - key: N8N_PERSONALIZATION_ENABLED
+        value: "false"
+      - key: N8N_METRICS
+        value: "false"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=380"
