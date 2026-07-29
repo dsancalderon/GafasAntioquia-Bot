@@ -1,6 +1,6 @@
-# Gafas Antioquia - Asistente Virtual de WhatsApp
+# Tic Tac Agency - Servidor Central de Automatización (n8n)
 
-Asistente automatizado de servicio al cliente y ventas para Gafas Antioquia. Este proyecto integra un flujo conversacional inteligente utilizando n8n, modelos de lenguaje grande (LLMs) y la API oficial de WhatsApp Business a través de YCloud para gestionar consultas de inventario, cotizaciones y derivación a agentes humanos.
+Servidor de orquestación de flujos de automatización e inteligencia artificial para **Tic Tac Agency**. Esta instancia autoalojada de n8n gestiona los flujos conversacionales, bots de servicio al cliente, cotizadores e integraciones de IA (LLMs) para las diversas marcas y clientes de la agencia (incluyendo WhatsApp Business API vía YCloud, Google Gemini, Google Sheets, CRM, etc.).
 
 ## Tecnologías y Arquitectura
 

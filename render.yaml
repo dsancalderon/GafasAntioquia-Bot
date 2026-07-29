@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: n8n-gafas-antioquia
+    name: n8n-tictac-agency
     runtime: docker
     dockerfilePath: Dockerfile
     plan: free
@@ -41,9 +41,9 @@ services:
       - key: N8N_PROTOCOL
         value: https
       - key: WEBHOOK_URL
-        value: https://n8n-gafas-antioquia.onrender.com/
+        value: https://n8n-tictac-agency.onrender.com/
       - key: N8N_EDITOR_BASE_URL
-        value: https://n8n-gafas-antioquia.onrender.com/
+        value: https://n8n-tictac-agency.onrender.com/
       - key: GENERIC_TIMEZONE
         value: America/Bogota
       - key: TZ

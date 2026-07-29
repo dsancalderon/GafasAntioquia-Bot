@@ -1,7 +1,7 @@
 version: '3.8'
 
 networks:
-  gafas_net:
+  tictac_net:
     driver: bridge
 
 volumes:
@@ -10,10 +10,10 @@ volumes:
 services:
   n8n:
     image: n8nio/n8n:latest
-    container_name: n8n_gafas
+    container_name: n8n_tictac
     restart: unless-stopped
     networks:
-      - gafas_net
+      - tictac_net
     ports:
       - "5678:5678"
     volumes:
@@ -25,13 +25,13 @@ services:
       
   openwa:
     image: openwa/wa-automate:latest
-    container_name: openwa_gafas
+    container_name: openwa_tictac
     restart: unless-stopped
     networks:
-      - gafas_net
+      - tictac_net
     ports:
       - "8080:8080"
     volumes:
       - openwa_storage:/app/session
     environment:
-      - WA_CLI_ARGS=--use-chrome --web-api-key=GafasAntioquia2026 --dashboard
+      - WA_CLI_ARGS=--use-chrome --web-api-key=TicTacAgency2026 --dashboard
