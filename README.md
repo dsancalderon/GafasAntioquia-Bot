@@ -1,94 +1,84 @@
 # Tic Tac Agency - Servidor Central de Automatización (n8n)
 
-Servidor de orquestación de flujos de automatización e inteligencia artificial para **Tic Tac Agency**. Esta instancia autoalojada de n8n gestiona los flujos conversacionales, bots de servicio al cliente, cotizadores e integraciones de IA (LLMs) para las diversas marcas y clientes de la agencia (incluyendo WhatsApp Business API vía YCloud, Google Gemini, Google Sheets, CRM, etc.).
+Servidor de orquestación de flujos de automatización e inteligencia artificial para **Tic Tac Agency Performance SAS**. Esta instancia autoalojada de **n8n** desplegada en **Render** gestiona los flujos conversacionales, bots de atención al cliente, cotizadores automáticos e integraciones de IA (LLMs) para las marcas y clientes de la agencia.
 
-## Tecnologías y Arquitectura
+---
 
-El proyecto utiliza una arquitectura de automatización *self-hosted* y servicios en la nube:
+## 🏗️ Arquitectura del Sistema
 
-*   **Orquestador:** [n8n](https://n8n.io/) (Autoalojado vía Docker).
-*   **Proveedor de WhatsApp API:** [YCloud](https://ycloud.com/) (Webhook para recepción y HTTP Requests para envío).
-*   **Inteligencia Artificial:** Gemini 1.5 Flash / 2.0 Flash (Google AI Studio) - Seleccionado por su alta velocidad, eficiencia de costos y capacidad de análisis multimodal (imágenes).
-*   **Base de Datos / Inventario:** Google Sheets.
+El proyecto utiliza una arquitectura de microservicios en la nube:
 
-## Estructura de la Base de Datos (Inventario)
+* **Orquestador Principal:** [n8n](https://n8n.io/) desplegado en [Render Cloud Platform](https://render.com/) mediante contenedor Docker y base de datos **PostgreSQL en Render**.
+* **Integración WhatsApp Directa:** Meta WhatsApp Business Cloud API (Directa desde Meta Graph API `v20.0`).
+  * **Nombre de la App de Meta:** `Tic Tac Agency N8N` (App ID: `1533701941786947` - Estado: **Publicada / Live**).
+  * **Cuenta WABA:** `Tic Tac Agency Bot` (WABA ID: `1023085523781668`).
+  * **Identificador de Número de Teléfono (Phone ID):** `1209428932251589` (`+57 311 8849896`).
+* **Soporte de Coexistencia / BSP:** [YCloud](https://ycloud.com/) (API Key activa para compatibilidad con la App móvil de WhatsApp Business en smartphone).
+* **Inteligencia Artificial:** Google Gemini (1.5 Flash / 2.0 Flash) en Google AI Studio para clasificación de intenciones y procesamiento multimodal.
+* **Base de Datos / Inventario & CRM:** Google Sheets / PostgreSQL Render.
 
-Para que el modelo pueda identificar y cotizar correctamente los productos, la tabla de inventario requiere las siguientes columnas:
+---
 
-| Columna | Descripción | Ejemplo |
+## 🔌 Webhook Endpoints en Render
+
+El servidor n8n expone dos puntos de enlace (Webhooks) seguros bajo la URL de producción `https://n8n-gafas-antioquia.onrender.com`:
+
+| Endpoint | Origen | Descripción |
 | :--- | :--- | :--- |
-| `Modelo` | Nombre interno/comercial de las gafas. | Gafas Aviador Lujo |
-| `Categoría` | Tipo de gafas. | de lujo, deportivas, de sol, formuladas |
-| `Precio` | Valor comercial. | $150.000 |
-| `URL Imagen` | Enlace público a la foto del producto. | `https://.../foto.jpg` |
-| `Descripción Visual` | Atributos físicos para el análisis multimodal de la IA. | Marco metálico dorado delgado, lentes circulares oscuros. |
+| `/webhook/whatsapp` | Meta Developers (Cloud API Directa) | Recibe reto de verificación GET (`hub.challenge`) y eventos POST de mensajes entrantes directo desde servidores de Meta. |
+| `/webhook/ycloud` | YCloud API | Recibe eventos de mensajes entrantes en modo Coexistencia. |
 
-## Flujo de Trabajo (Workflow en n8n)
+---
 
-El bot sigue un embudo de atención estructurado para filtrar intenciones y optimizar el tiempo del equipo de ventas:
+## 🤖 Flujo de Atención Conversacional (Workflow)
 
-### 1. Recepción y Clasificación (Triage)
-*   El cliente envía un mensaje a la línea de WhatsApp.
-*   Ycloud reponde preguntandole al cliente con un saludo y pregunta en que le podemos ayudar 
-*   El cliente responde.
-*   YCloud dispara un Webhook hacia n8n.
-*   Gemini (1.5/2.0 Flash) analiza el mensaje y lo clasifica en una de 4 categorías: `de lujo`, `deportivas`, `de sol`, o `formuladas`.
-*   Si no clasifica el mensaje en las 4 categorías sigue hablando con el cliente hasta determinar  unas de estas 4 categorías
+1. **Recepción del Mensaje Entrante:**
+   * El cliente escribe a la línea de WhatsApp `+57 311 8849896`.
+   * Meta Cloud API o YCloud envía el payload del mensaje entrante al webhook de n8n.
+2. **Evaluación de Intención con IA (Gemini):**
+   * El modelo de lenguaje analiza el mensaje entrante y clasifica la necesidad del usuario (consultas, asesoría de servicios de la agencia, cotizaciones).
+3. **Respuesta Automática en Tiempo Real:**
+   * n8n procesa la respuesta y realiza la llamada POST de retorno a la API de WhatsApp para responderle al cliente en menos de 1 segundo.
+4. **Transferencia a Asesor Humano:**
+   * Si se detecta intención de cierre de contrato o consulta especializada, el flujo etiqueta la conversación y transfiere la atención a la App móvil de WhatsApp Business.
 
-### 2. Derivación de Casos Clínicos
-*   Si la categoría es **formuladas**:
-    *   n8n envía una solicitud a YCloud para etiquetar el chat/contacto como "Gafas Formuladas".
-    *   El bot detiene su intervención y envía una alerta para que un asesor humano tome el control de la conversación.
+---
 
-### 3. Consulta de Catálogo y Envío de Opciones
-*   Para las categorías `de lujo`, `deportivas`, o `de sol`:
-    *   n8n consulta la hoja de cálculo (Google Sheets) buscando productos disponibles bajo la categoría solicitada.
-    *   A través de YCloud, el bot envía al cliente las imágenes (URLs) de los modelos disponibles, preguntando cuál le interesa.
+## 🛠️ Variables de Entorno (.env & Render)
 
-### 4. Detección de Selección del Cliente
-El bot está diseñado para interpretar la selección del cliente en tres escenarios posibles:
-*   **Escenario A (Imágenes):** El cliente toma un pantallazo de un modelo y lo envía. Gemini analiza visualmente la imagen entrante, la compara con las "Descripciones Visuales" del catálogo y extrae el nombre del modelo.
-*   **Escenario B (Cita de Mensaje):** El cliente responde deslizando una de las fotos enviadas. n8n lee el `context.message_id` del payload de YCloud para identificar matemáticamente qué modelo seleccionó.
-*   **Escenario C (Lenguaje Natural):** El cliente responde con adjetivos (ej. "las azules delgadas"). Gemini utiliza la memoria de la conversación para deducir a qué modelo se refiere.
+Las siguientes variables de entorno deben estar configuradas en la consola de **Render** y en el archivo local `.env`:
 
-### 5. Cotización y Cierre
-*   Una vez identificado el modelo, n8n extrae el precio de la base de datos y se lo envía al cliente.
-*   Gemini evalúa la respuesta del cliente tras ver el precio. Si detecta intención de compra (ej. "¿Cómo pago?", "Quiero esas"):
-    *   n8n etiqueta al contacto en YCloud como "Cliente Potencial".
-    *   El flujo se transfiere a un humano para procesar el pago y el envío.
-
-## Instalación y Despliegue Local
-
-Sigue estos pasos para configurar y levantar el entorno de desarrollo:
-
-### 1. Configurar Variables de Entorno
-Crea tu archivo `.env` copiando el archivo de ejemplo [.env.example](file:///c:/Users/Santi/GafasAntioquia/.env.example):
 ```bash
-cp .env.example .env
-```
-Abre el archivo `.env` recién creado y define las variables:
-*   `WEBHOOK_URL`: Debe apuntar a la URL pública de tu instancia de n8n para recibir eventos de YCloud (ver sección de Webhooks abajo).
-*   `GENERIC_TIMEZONE` y `TZ`: Define tu zona horaria (por defecto `America/Bogota`).
+# Nombre del Servicio
+SERVICE_NAME=n8n-tictac-agency
 
-### 2. Levantar los Servicios (Docker Compose)
-Levanta la instancia de n8n utilizando el archivo [docker-compose.yml](file:///c:/Users/Santi/GafasAntioquia/docker-compose.yml) configurado:
-```bash
-docker compose up -d
-```
-Una vez levantado el contenedor, puedes ingresar a la interfaz gráfica de n8n desde tu navegador en: [http://localhost:5678](http://localhost:5678).
+# Base de datos PostgreSQL en Render
+DB_TYPE=postgresdb
+DB_POSTGRESDB_HOST=dpg-xxxx-a.render.com
+DB_POSTGRESDB_PORT=5432
+DB_POSTGRESDB_DATABASE=n8n_tictac_db
+DB_POSTGRESDB_USER=n8n_tictac_user
+DB_POSTGRESDB_PASSWORD=xxxx
 
-### 3. Exposición de Webhooks con Túnel (ngrok)
-Dado que YCloud necesita enviar webhooks a tu instancia local de n8n, debes exponer tu puerto local `5678` a internet. Si usas **ngrok**, ejecuta el siguiente comando:
-```bash
-ngrok http 5678
-```
-Copia la URL HTTPS segura generada por ngrok (ejemplo: `https://tu-subdominio.ngrok-free.app`) y asígnala en la variable `WEBHOOK_URL` de tu archivo `.env`. Luego, reinicia los contenedores para aplicar el cambio en n8n:
-```bash
-docker compose down && docker compose up -d
+# Llave de Encriptación n8n y API Key
+N8N_ENCRYPTION_KEY=xxxx
+N8N_API_KEY=xxxx
+
+# Configuración Meta Cloud API & YCloud
+META_PHONE_NUMBER_ID=1209428932251589
+META_WABA_ID=1023085523781668
+YCLOUD_API_KEY=76bceb57f1aea93641540fe98a2091f5
+
+# Mantenimiento de Ejecuciones
+EXECUTIONS_DATA_PRUNE=true
+EXECUTIONS_DATA_MAX_AGE=168
 ```
 
-### 4. Configurar Credenciales en n8n
-Una vez dentro del panel de n8n, configura las credenciales necesarias para los servicios externos:
-1.  **Google Sheets**: Configura el acceso OAuth2 o usa una Service Account para interactuar con la hoja del catálogo de inventario.
-2.  **Google Gemini (Google AI Studio)**: Crea una credencial de tipo *Google API* con tu clave de API de Gemini.
-3.  **YCloud**: Configura el nodo de YCloud o usa nodos de tipo HTTP Request autorizando tus llamadas mediante tu Token de API de YCloud.
+---
+
+## 🐙 Despliegue en Render Cloud
+
+El servicio se despliega automáticamente mediante Git Push al repositorio oficial:
+`https://github.com/dsancalderon/tictac-agency-n8n.git`
+
+El archivo `render.yaml` define la infraestructura del Web Service de Render y la base de datos PostgreSQL asociada.
