@@ -39,7 +39,7 @@ services:
       - key: META_VERIFY_TOKEN
         sync: false
       - key: N8N_HOST
-        value: 0.0.0.0
+        value: n8n-gafas-antioquia.onrender.com
       - key: N8N_LISTEN_ADDRESS
         value: 0.0.0.0
       - key: N8N_PORT

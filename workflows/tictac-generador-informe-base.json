@@ -1,0 +1,85 @@
+{
+  "name": "Tic Tac - Generador Base de Informe",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            { "name": "customerPhone" },
+            { "name": "clientId" },
+            { "name": "clientName" }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "id": "b1111111-1111-4111-8111-111111111111",
+      "name": "Entrada desde Router"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst periodEnd = new Date();\nconst periodStart = new Date(periodEnd);\nperiodStart.setUTCDate(periodStart.getUTCDate() - 7);\nconst clientConfig = { clientId: input.clientId || 'CLI-001', clientName: input.clientName || 'Proyecto Pekín', hubspotCompanyId: '<CONFIGURE_HUBSPOT_COMPANY_ID>', slidesTemplateId: '16SvDTUUF9q7VspDWbX8Zr4YTU6QJi__L3oh5qvJYtq0', driveFolderId: '<CONFIGURE_GOOGLE_DRIVE_FOLDER_ID>', weeklyLeadGoal: 100, weeklyInvestmentGoal: 5000000, timezone: 'America/Bogota' };\nreturn [{ json: { ...input, ...clientConfig, periodStart: periodStart.toISOString(), periodEnd: periodEnd.toISOString() } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0],
+      "id": "b2222222-2222-4222-8222-222222222222",
+      "name": "Cargar Configuración Temporal"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst metrics = {\n  recognition: { kpi: 125000, actual: 14014, performance: 11.21, budget: 500000, investment: 48732 },\n  investors: { kpi: 120, leads: 62, performance: 51.67, budget: 1200000, investment: 288141, cpa: 5145 },\n  housing: { kpi: 40, leads: 17, performance: 42.50, budget: 400000, investment: 97517, cpa: 5736 },\n  studio: { investment: 95888, leads: 6, cpa: 15981 },\n  pmax: { kpi: 30, leads: 24, performance: 80.00, budget: 1200000, investment: 381000 },\n  totals: { targetLeads: 190, generatedLeads: 103, performance: 54.21, remainder: 2388801 },\n  leadsRegistered: 103,\n  mqls: 41,\n  noNicho: 12,\n  pendingClassification: 8,\n  sales: 5,\n  actualInvestment: 4650000\n};\nconst leadAchievement = Number(((metrics.leadsRegistered / input.weeklyLeadGoal) * 100).toFixed(1));\nconst cpl = Math.round(metrics.actualInvestment / metrics.leadsRegistered);\nreturn [{ json: { ...input, ...metrics, leadAchievement, cpl, dataSource: 'mock' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 0],
+      "id": "b3333333-3333-4333-8333-333333333333",
+      "name": "Recolectar Datos Simulados"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst strategicCopy = { ANALISIS_TENDENCIA_VIVIENDA: `Durante el período observamos ${input.leadsRegistered} registros, equivalentes al ${input.leadAchievement}% de la meta semanal.`, RECOMENDACION_AGENCIA_VIVIENDA: `Desde la agencia, consideramos prioritario mantener la optimización de audiencias y creatividades para sostener un CPL cercano a $${input.cpl.toLocaleString('es-CO')}.`, SINTESIS_EMBUDO: `El embudo registra ${input.mqls} MQL, ${input.pendingClassification} contactos pendientes de clasificación y ${input.sales} ventas.` };\nreturn [{ json: { ...input, strategicCopy, aiSource: 'mock' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 0],
+      "id": "b4444444-4444-4444-8444-444444444444",
+      "name": "Generar Análisis Simulado"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst number = (value) => Number(value).toLocaleString('en-US');\nconst money = (value) => `$${number(value)}`;\nconst pct = (value) => `${Number(value).toFixed(2)}%`;\nconst replacements = {\n  '{{NOMBRE_PROYECTO_MAYUS}}': input.clientName.toUpperCase(),\n  '{{META_RECONOCIMIENTO_KPI}}': number(input.recognition.kpi),\n  '{{META_RECONOCIMIENTO_REAL}}': number(input.recognition.actual),\n  '{{META_RECONOCIMIENTO_PERFORMANCE}}': pct(input.recognition.performance),\n  '{{META_RECONOCIMIENTO_PRESUPUESTO}}': money(input.recognition.budget),\n  '{{META_RECONOCIMIENTO_INVERSION}}': money(input.recognition.investment),\n  '{{META_INVERSIONISTAS_KPI}}': number(input.investors.kpi),\n  '{{META_INVERSIONISTAS_LEADS}}': number(input.investors.leads),\n  '{{META_INVERSIONISTAS_PERFORMANCE}}': pct(input.investors.performance),\n  '{{META_INVERSIONISTAS_PRESUPUESTO}}': money(input.investors.budget),\n  '{{META_INVERSIONISTAS_INVERSION}}': money(input.investors.investment),\n  '{{META_INVERSIONISTAS_CPA}}': money(input.investors.cpa),\n  '{{META_VIVIENDA_KPI}}': number(input.housing.kpi),\n  '{{META_VIVIENDA_LEADS}}': number(input.housing.leads),\n  '{{META_VIVIENDA_PERFORMANCE}}': pct(input.housing.performance),\n  '{{META_VIVIENDA_PRESUPUESTO}}': money(input.housing.budget),\n  '{{META_VIVIENDA_INVERSION}}': money(input.housing.investment),\n  '{{META_VIVIENDA_CPA}}': money(input.housing.cpa),\n  '{{META_APARTAESTUDIO_INVERSION}}': money(input.studio.investment),\n  '{{META_APARTAESTUDIO_LEADS}}': number(input.studio.leads),\n  '{{META_APARTAESTUDIO_CPA}}': money(input.studio.cpa),\n  '{{GOOGLE_PMAX_KPI}}': number(input.pmax.kpi),\n  '{{GOOGLE_PMAX_LEADS}}': number(input.pmax.leads),\n  '{{GOOGLE_PMAX_PERFORMANCE}}': pct(input.pmax.performance),\n  '{{GOOGLE_PMAX_PRESUPUESTO}}': money(input.pmax.budget),\n  '{{GOOGLE_PMAX_INVERSION}}': money(input.pmax.investment),\n  '{{TOTAL_META_LEADS}}': number(input.totals.targetLeads),\n  '{{TOTAL_LEADS_GENERADOS}}': number(input.totals.generatedLeads),\n  '{{TOTAL_PERFORMANCE}}': pct(input.totals.performance),\n  '{{TOTAL_REMANENTE}}': money(input.totals.remainder),\n  '{{LEADS_REGISTRADOS}}': number(input.leadsRegistered),\n  '{{MQLS}}': number(input.mqls),\n  '{{NO_NICHO}}': number(input.noNicho),\n  '{{PENDIENTES}}': number(input.pendingClassification),\n  '{{VENTAS}}': number(input.sales),\n  '{{SINTESIS_EMBUDO}}': input.strategicCopy.SINTESIS_EMBUDO\n};\nreturn [{ json: { ...input, replacements, reportStatus: 'mock_ready', reportUrl: '<GENERATED_GOOGLE_SLIDES_URL>' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 0],
+      "id": "b5555555-5555-4555-8555-555555555555",
+      "name": "Preparar Placeholders de Slides"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst divider = '\\u2501'.repeat(14);\nconst finalMessage = [\n  '\\u2705 *TIC TAC | INFORME COMPLETADO*',\n  divider,\n  `\\u{1F3E2} *Proyecto:* ${input.clientName}`,\n  `\\u{1F4CA} *Leads generados:* ${input.leadsRegistered}`,\n  `\\u{1F3AF} *Cumplimiento:* ${input.leadAchievement}%`,\n  `\\u{1F4B0} *CPL promedio:* $${input.cpl.toLocaleString('es-CO')}`,\n  '',\n  `\\u{1F4C1} *Ver informe:* ${input.reportUrl}`,\n  divider,\n  '\\u2139\\uFE0F _Versi\\u00f3n de prueba con datos simulados._',\n  '_Tic Tac Agency Performance SAS_'\n].join('\\n');\nreturn [{ json: { ...input, finalMessage } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 0],
+      "id": "b6666666-6666-4666-8666-666666666666",
+      "name": "Preparar Notificación Final"
+    }
+  ],
+  "connections": {
+    "Entrada desde Router": { "main": [[{ "node": "Cargar Configuración Temporal", "type": "main", "index": 0 }]] },
+    "Cargar Configuración Temporal": { "main": [[{ "node": "Recolectar Datos Simulados", "type": "main", "index": 0 }]] },
+    "Recolectar Datos Simulados": { "main": [[{ "node": "Generar Análisis Simulado", "type": "main", "index": 0 }]] },
+    "Generar Análisis Simulado": { "main": [[{ "node": "Preparar Placeholders de Slides", "type": "main", "index": 0 }]] },
+    "Preparar Placeholders de Slides": { "main": [[{ "node": "Preparar Notificación Final", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "b7777777-7777-4777-8777-777777777777",
+  "meta": { "templateCredsSetupCompleted": false },
+  "id": "tictac-generador-informe-template",
+  "tags": []
+}

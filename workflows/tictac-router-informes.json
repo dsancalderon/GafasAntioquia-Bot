@@ -1,0 +1,121 @@
+{
+  "name": "Tic Tac - Router de Informes",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            { "name": "customerPhone" },
+            { "name": "messageText" }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "id": "a1111111-1111-4111-8111-111111111111",
+      "name": "Entrada desde Gateway"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst normalizePhone = (value) => '+' + String(value || '').replace(/\\D/g, '');\nconst normalizeText = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();\nconst authorizedUsers = {\n  '+573222046768': 'Nicol\\u00e1s',\n  '+573027697381': 'Santi'\n};\nconst customerPhone = normalizePhone(input.customerPhone);\nconst messageText = String(input.messageText || '').trim();\nconst normalizedText = normalizeText(messageText);\nconst userName = authorizedUsers[customerPhone] || null;\nconst isAuthorized = Boolean(userName);\nconst clients = [{ clientId: 'CLI-001', clientName: 'Proyecto Pek\\u00edn', aliases: ['proyecto pekin', 'proyecto kinku', 'pekin', 'kinku', '1'] }];\nconst selectedClient = clients.find((client) => client.aliases.some((alias) => /^\\d+$/.test(alias) ? normalizedText === alias : normalizedText.includes(alias))) || null;\nconst divider = '\\u2501'.repeat(14);\nlet route = 'standard_chat';\nlet replyText = '';\nlet shouldGenerateReport = false;\nif (isAuthorized && selectedClient) {\n  route = 'report_request';\n  shouldGenerateReport = true;\n  replyText = [\n    '\\u{1F680} *TIC TAC | INFORME EN PROCESO*',\n    divider,\n    `\\u{1F464} *Solicitado por:* ${userName}`,\n    `\\u{1F3E2} *Proyecto:* ${selectedClient.clientName}`,\n    '\\u{1F4CA} *Estado:* Recopilando y analizando informaci\\u00f3n',\n    '',\n    'Te avisar\\u00e9 por este chat tan pronto el informe est\\u00e9 listo. \\u2705',\n    divider,\n    '_Tic Tac Agency Performance SAS_'\n  ].join('\\n');\n} else if (isAuthorized) {\n  route = 'report_menu';\n  replyText = [\n    '\\u{1F4CA} *TIC TAC | INFORMES EJECUTIVOS*',\n    divider,\n    `\\u00a1Hola, *${userName}*! \\u{1F44B}`,\n    'Selecciona el proyecto que deseas analizar:',\n    '',\n    '1\\uFE0F\\u20E3 *Proyecto Pek\\u00edn*',\n    '   _Tambi\\u00e9n puedes escribir \"Pek\\u00edn\" o \"Kinku\"._',\n    '',\n    '\\u{1F4AC} Responde con el *n\\u00famero* o el *nombre del proyecto* para comenzar.',\n    divider,\n    '_Tic Tac Agency Performance SAS_'\n  ].join('\\n');\n} else {\n  replyText = [\n    '\\u{1F44B} *TIC TAC AGENCY*',\n    divider,\n    '\\u00a1Hola! Hemos recibido tu mensaje correctamente.',\n    '',\n    'Nuestro asistente est\\u00e1 listo para ayudarte. \\u{1F916}',\n    divider,\n    '_Tic Tac Agency Performance SAS_'\n  ].join('\\n');\n}\nreturn [{ json: { ...input, customerPhone, messageText, userName, isAuthorized, route, shouldGenerateReport, clientId: selectedClient?.clientId || null, clientName: selectedClient?.clientName || null, replyText } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [288, 0],
+      "id": "a2222222-2222-4222-8222-222222222222",
+      "name": "Autorizar y Detectar Proyecto"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "id": "a3333333-3333-4333-8333-333333333333",
+              "leftValue": "={{ $json.shouldGenerateReport }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [512, 0],
+      "id": "a4444444-4444-4444-8444-444444444444",
+      "name": "Debe Generar Informe"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "xK8GPmsUphKV2B2Q",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/xK8GPmsUphKV2B2Q",
+          "cachedResultName": "Tic Tac - Generador Base de Informe"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customerPhone": "={{ $json.customerPhone }}",
+            "clientId": "={{ $json.clientId }}",
+            "clientName": "={{ $json.clientName }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "customerPhone", "displayName": "customerPhone", "required": true, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" },
+            { "id": "clientId", "displayName": "clientId", "required": true, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" },
+            { "id": "clientName", "displayName": "clientName", "required": true, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [736, -96],
+      "id": "a5555555-5555-4555-8555-555555555555",
+      "name": "Ejecutar Generador en Segundo Plano"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 0],
+      "id": "a7777777-7777-4777-8777-777777777777",
+      "name": "Devolver Respuesta al Gateway"
+    }
+  ],
+  "connections": {
+    "Entrada desde Gateway": {
+      "main": [[{ "node": "Autorizar y Detectar Proyecto", "type": "main", "index": 0 }]]
+    },
+    "Autorizar y Detectar Proyecto": {
+      "main": [[{ "node": "Debe Generar Informe", "type": "main", "index": 0 }]]
+    },
+    "Debe Generar Informe": {
+      "main": [
+        [{ "node": "Ejecutar Generador en Segundo Plano", "type": "main", "index": 0 }],
+        [{ "node": "Devolver Respuesta al Gateway", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ejecutar Generador en Segundo Plano": {
+      "main": [[{ "node": "Devolver Respuesta al Gateway", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "a6666666-6666-4666-8666-666666666666",
+  "meta": { "templateCredsSetupCompleted": false },
+  "id": "tictac-router-informes-template",
+  "tags": []
+}

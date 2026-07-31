@@ -112,7 +112,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nconst normalizePhone = (value) => '+' + String(value || '').replace(/\\D/g, '');\nconst adminPhone = '<CONFIGURE_ADMIN_PHONE>';\nconst customerPhone = normalizePhone(input.customerPhone);\nconst messageText = String(input.messageText || '').trim();\nconst isAdminCommand = customerPhone === adminPhone && messageText.startsWith('#');\nreturn [{ json: { ...input, customerPhone, messageText, isAdminCommand } }];"
+        "jsCode": "const input = $input.first().json;\nconst normalizePhone = (value) => '+' + String(value || '').replace(/\\D/g, '');\nconst adminPhones = ['+573222046768', '+573027697381'];\nconst customerPhone = normalizePhone(input.customerPhone);\nconst messageText = String(input.messageText || '').trim();\nconst isAdminCommand = adminPhones.includes(customerPhone) && messageText.startsWith('#');\nreturn [{ json: { ...input, customerPhone, messageText, isAdminCommand } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -211,7 +211,59 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\r\nconst replyText = input.replyText || `?Hola! ??? Recib? tu mensaje: \"${input.messageText}\". ?El chatbot de Tic Tac Agency est? respondiendo correctamente!`;\r\nreturn [{ json: { ...input, responseText: replyText } }];"
+        "workflowId": {
+          "__rl": true,
+          "value": "hHodUHQm8hPyCt78",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/hHodUHQm8hPyCt78",
+          "cachedResultName": "Tic Tac - Router de Informes"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customerPhone": "={{ $json.customerPhone }}",
+            "messageText": "={{ $json.messageText }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "customerPhone",
+              "displayName": "customerPhone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "messageText",
+              "displayName": "messageText",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        256
+      ],
+      "id": "88888888-8888-4888-8888-888888888888",
+      "name": "Ejecutar Router de Informes"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst divider = '\\u2501'.repeat(14);\nconst fallbackText = ['\\u{1F44B} *TIC TAC AGENCY*', divider, '\\u00a1Hola! Hemos recibido tu mensaje correctamente.', '', 'Nuestro asistente est\\u00e1 listo para ayudarte. \\u{1F916}', divider, '_Tic Tac Agency Performance SAS_'].join('\\n');\nreturn [{ json: { ...input, responseText: input.replyText || fallbackText } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -290,7 +342,7 @@
         ],
         [
           {
-            "node": "Preparar Respuesta",
+            "node": "Ejecutar Router de Informes",
             "type": "main",
             "index": 0
           }
@@ -298,6 +350,17 @@
       ]
     },
     "Ejecutar Control Administrativo": {
+      "main": [
+        [
+          {
+            "node": "Preparar Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar Router de Informes": {
       "main": [
         [
           {
