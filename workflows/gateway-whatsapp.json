@@ -1,0 +1,328 @@
+{
+  "id": "E2jmRTQX0dtfdvf7",
+  "name": "Prueba YCloud y Meta Directo - Tic Tac Agency",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ycloud",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "webhook-ycloud-post",
+      "name": "Webhook YCloud (Entrante)",
+      "webhookId": "50c0a05a-5763-40da-869b-0e860504a6e9"
+    },
+    {
+      "parameters": {
+        "path": "whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        320
+      ],
+      "id": "webhook-meta-get",
+      "name": "Meta Webhook GET (Challenge)",
+      "webhookId": "87368735-e00c-4cc2-838f-c7f8c01e9d71"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        320
+      ],
+      "id": "respond-meta-challenge",
+      "name": "Responder Challenge Meta"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        192
+      ],
+      "id": "webhook-meta-post",
+      "name": "Meta Webhook POST (Entrante)",
+      "webhookId": "f728c504-760d-4d73-9f5a-d93564f19dcc"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalizar Payload (Meta & YCloud) con filtro anti-bucle estricto\nconst body = $json.body || {};\nlet customerPhone = null;\nlet messageText = null;\n\n// Caso 1: Evento de YCloud\nif (body.type) {\n  if (body.type !== 'whatsapp.inbound_message.received') {\n    return []; // Ignorar estados de entrega, plantillas, etc.\n  }\n  const msg = body.whatsappInboundMessage || {};\n  customerPhone = msg.from || (body.customer && body.customer.phoneNumber);\n  messageText = (msg.text && msg.text.body) ? msg.text.body : null;\n}\n// Caso 2: Evento directo de Meta Cloud API\nelse if (body.object === 'whatsapp_business_account' && body.entry) {\n  for (const entry of body.entry) {\n    for (const change of (entry.changes || [])) {\n      const val = change.value || {};\n      // Si es reporte de estado (entregado, leido, enviado), IGNORAR\n      if (val.statuses && val.statuses.length > 0) {\n        return [];\n      }\n      if (val.messages && val.messages.length > 0) {\n        const msg = val.messages[0];\n        customerPhone = msg.from;\n        if (msg.type === 'text' && msg.text) {\n          messageText = msg.text.body;\n        }\n      }\n    }\n  }\n}\n\n// Filtrar si el n?mero es el de nuestra propia l?nea (+573118849896)\nif (!customerPhone || !messageText || customerPhone.includes('3118849896')) {\n  return [];\n}\n\nif (!customerPhone.startsWith('+')) {\n  customerPhone = '+' + customerPhone;\n}\n\nreturn [{\n  json: {\n    customerPhone: customerPhone,\n    messageText: messageText\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        112
+      ],
+      "id": "normalize-payload",
+      "name": "Normalizar Payload (Meta & YCloud)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ycloud.com/v2/whatsapp/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.YCLOUD_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"from\": \"+573118849896\", \"to\": $json.customerPhone, \"type\": \"text\", \"text\": { \"body\": $json.responseText } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1232,
+        128
+      ],
+      "id": "send-ycloud-response",
+      "name": "Enviar Respuesta Automatica"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst normalizePhone = (value) => '+' + String(value || '').replace(/\\D/g, '');\nconst adminPhone = '<CONFIGURE_ADMIN_PHONE>';\nconst customerPhone = normalizePhone(input.customerPhone);\nconst messageText = String(input.messageText || '').trim();\nconst isAdminCommand = customerPhone === adminPhone && messageText.startsWith('#');\nreturn [{ json: { ...input, customerPhone, messageText, isAdminCommand } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        112
+      ],
+      "id": "33333333-3333-4333-8333-333333333333",
+      "name": "Enrutar Mensaje"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "44444444-4444-4444-8444-444444444444",
+              "leftValue": "={{ $json.isAdminCommand }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        112
+      ],
+      "id": "55555555-5555-4555-8555-555555555555",
+      "name": "Es Comando Administrativo"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NTbj019wzRf75a91",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/NTbj019wzRf75a91",
+          "cachedResultName": "Tic Tac - Control Administrativo"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customerPhone": "={{ $json.customerPhone }}",
+            "messageText": "={{ $json.messageText }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "customerPhone",
+              "displayName": "customerPhone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "messageText",
+              "displayName": "messageText",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        16
+      ],
+      "id": "66666666-6666-4666-8666-666666666666",
+      "name": "Ejecutar Control Administrativo"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\r\nconst replyText = input.replyText || `?Hola! ??? Recib? tu mensaje: \"${input.messageText}\". ?El chatbot de Tic Tac Agency est? respondiendo correctamente!`;\r\nreturn [{ json: { ...input, responseText: replyText } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        160
+      ],
+      "id": "77777777-7777-4777-8777-777777777777",
+      "name": "Preparar Respuesta"
+    }
+  ],
+  "connections": {
+    "Webhook YCloud (Entrante)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Payload (Meta & YCloud)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta Webhook GET (Challenge)": {
+      "main": [
+        [
+          {
+            "node": "Responder Challenge Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta Webhook POST (Entrante)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Payload (Meta & YCloud)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Payload (Meta & YCloud)": {
+      "main": [
+        [
+          {
+            "node": "Enrutar Mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrutar Mensaje": {
+      "main": [
+        [
+          {
+            "node": "Es Comando Administrativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Comando Administrativo": {
+      "main": [
+        [
+          {
+            "node": "Ejecutar Control Administrativo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar Control Administrativo": {
+      "main": [
+        [
+          {
+            "node": "Preparar Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Enviar Respuesta Automatica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "exportedAt": "2026-07-31T01:30:42.7131738Z",
+  "sourceVersionId": "df4879da-73b3-4dca-bc1d-cfa164f7402a"
+}

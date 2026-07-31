@@ -9,7 +9,7 @@ volumes:
   openwa_storage:
 services:
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:2.32.6@sha256:5f7856f4fc7cd935230f7596e39fdb3d5eda0e379c5b40b699b9c0eb35ebd0bf
     container_name: n8n_tictac
     restart: unless-stopped
     networks:
@@ -34,4 +34,4 @@ services:
     volumes:
       - openwa_storage:/app/session
     environment:
-      - WA_CLI_ARGS=--use-chrome --web-api-key=TicTacAgency2026 --dashboard
+      - WA_CLI_ARGS=--use-chrome --web-api-key=${OPENWA_API_KEY:?OPENWA_API_KEY es obligatoria} --dashboard

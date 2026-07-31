@@ -30,6 +30,14 @@ services:
           property: password
       - key: N8N_ENCRYPTION_KEY
         generateValue: true
+      - key: YCLOUD_API_KEY
+        sync: false
+      - key: YCLOUD_WEBHOOK_SECRET
+        sync: false
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: META_VERIFY_TOKEN
+        sync: false
       - key: N8N_HOST
         value: 0.0.0.0
       - key: N8N_LISTEN_ADDRESS
@@ -41,9 +49,9 @@ services:
       - key: N8N_PROTOCOL
         value: https
       - key: WEBHOOK_URL
-        value: https://n8n-tictac-agency.onrender.com/
+        value: https://n8n-gafas-antioquia.onrender.com/
       - key: N8N_EDITOR_BASE_URL
-        value: https://n8n-tictac-agency.onrender.com/
+        value: https://n8n-gafas-antioquia.onrender.com/
       - key: GENERIC_TIMEZONE
         value: America/Bogota
       - key: TZ

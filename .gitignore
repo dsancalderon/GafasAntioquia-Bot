@@ -3,6 +3,9 @@
 *.env
 *.log
 *.json
+!workflows/
+!workflows/*.json
+*_HANDOFF.md
 scratch/
 tunnel_url.txt
 cloudflare_url.txt
